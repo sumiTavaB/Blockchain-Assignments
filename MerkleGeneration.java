@@ -23,10 +23,13 @@ public class MerkleGeneration {
                 // System.out.println(" --> " + getMD5(transac[j]));
                 System.out.println(" --> " + transac[j]);
             }
+            String merkleRoot = generateMerkleRoot(transac, transac.length);
+            System.out.println("MERKLE ROOT --> " + merkleRoot);
         }
     }
 
-    public static String generateMerkleRoot(String transaction[], int size) throws NoSuchAlgorithmException {
+    public static String generateMerkleRoot(String transaction[], int size)
+            throws NoSuchAlgorithmException, UnsupportedEncodingException {
         String[] hash_level_7 = new String[50];
         String[] hash_level_6 = new String[26];
         String[] hash_level_5 = new String[14];
@@ -53,26 +56,45 @@ public class MerkleGeneration {
                     hash_level_7[i] = getMD5(transaction[i]);
                 }
                 for (int i = 0; i < size; i += 2) {
-                    if (!hash_level_7[i].equals("") || !hash_level_7.equals(null)) {
+                    if (hash_level_7[i].equals("") || hash_level_7.equals(null)) {
+                        break;
+                    } else {
                         hash_level_6[i] = getMD5(hash_level_7[lb] + hash_level_7[ub]);
                         lb += 2;
                         ub += 2;
                         ++count;
                     }
                 }
-
+            case "E":
+                lb = 0;
+                ub = 1;
+                for (int i = 0; i < size; i++) {
+                    hash_level_3[i] = getMD5(transaction[i]);
+                }
+                for (int i = 0; i < 2; i++) {
+                    hash_level_2[i] = getMD5(hash_level_3[lb] + hash_level_3[ub]);
+                    lb += 2;
+                    ub += 2;
+                }
+                hash_level_1[0] = getMD5(hash_level_2[0] + hash_level_2[1]);
         }
-        return null;
+        return hash_level_1[0];
     }
 
-    public static String getMD5(String str) throws NoSuchAlgorithmException, RuntimeException {
+    public static String getMD5(String str)
+            throws NoSuchAlgorithmException, RuntimeException, UnsupportedEncodingException {
+        byte[] bytesOfMessage = str.getBytes("UTF-8");
+
         MessageDigest md = MessageDigest.getInstance("MD5");
-        byte[] messageDigest = md.digest(str.getBytes());
-        BigInteger no = new BigInteger(1, messageDigest);
-        String hashtext = no.toString(16);
-        while (hashtext.length() < 32) {
-            hashtext = "0" + hashtext;
+        byte[] theMD5digest = md.digest(bytesOfMessage);
+
+        final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+        char[] hexChars = new char[theMD5digest.length * 2];
+        for (int j = 0; j < theMD5digest.length; j++) {
+            int v = theMD5digest[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
-        return hashtext;
+        return new String(hexChars);
     }
 }
