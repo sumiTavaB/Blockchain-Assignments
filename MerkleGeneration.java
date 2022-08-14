@@ -4,9 +4,6 @@ import java.security.NoSuchAlgorithmException;
 
 public class MerkleGeneration {
 
-    static String[] hash_level_7 = new String[50];
-    static String[] hash_level_6 = new String[26];
-
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Enter the no. of blocks:");
@@ -44,6 +41,11 @@ public class MerkleGeneration {
         }
         switch (effective_case) {
             case "A":
+                merkleRoot = fiftyLeafNode(transaction, size, "TRANSACT");
+                break;
+            case "B":
+                merkleRoot = twentysixLeafNode(transaction, size, "TRANSACT");
+                break;
             case "C":
                 merkleRoot = fourteenLeafNode(transaction, size, "TRANSACT");
                 break;
@@ -60,12 +62,89 @@ public class MerkleGeneration {
         return merkleRoot;
     }
 
+    public static String fiftyLeafNode(String transaction[], int size, String type)
+            throws NoSuchAlgorithmException, UnsupportedEncodingException {
+
+        String[] hash_level_7 = new String[50];
+        String[] hash_level_6 = new String[26];
+        int lb = 0;
+        int ub = 1;
+        int lastindex = countElements(transaction);
+        if (lastindex < size) {
+            if (lastindex % 2 == 1) {
+                transaction[lastindex] = transaction[lastindex - 1];
+            }
+        }
+        if (type.equals("TRANSACT")) {
+            for (int i = 0; i < size; i++) {
+                hash_level_7[i] = getSHA256(transaction[i]);
+                System.out.println(transaction[i] + " --> " + hash_level_7[i]);
+            }
+        } else if (type.equals("HASH")) {
+            for (int i = 0; i < size; i++) {
+                hash_level_7[i] = transaction[i];
+            }
+        }
+        for (int i = 0; i < hash_level_6.length - 1; i++) {
+            if (!(hash_level_7[lb] == null && hash_level_7[ub] == null)) {
+                System.out.println("(lb=" + lb + ", ub=" + ub + ") --> " + " i=" + i);
+                hash_level_6[i] = getSHA256(hash_level_7[lb] + hash_level_7[ub]);
+                System.out.println("(" + transaction[lb] + "+" + transaction[ub] + ") --> " + hash_level_6[i]);
+                lb += 2;
+                ub += 2;
+            } else {
+                break;
+            }
+        }
+        return (twentysixLeafNode(hash_level_6, hash_level_6.length, "HASH"));
+    }
+
+    public static String twentysixLeafNode(String transaction[], int size, String type)
+            throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        String[] hash_level_6 = new String[26];
+        String[] hash_level_5 = new String[14];
+        int lb = 0;
+        int ub = 1;
+        int lastindex = countElements(transaction);
+        if (lastindex < size) {
+            if (lastindex % 2 == 1) {
+                transaction[lastindex] = transaction[lastindex - 1];
+            }
+        }
+        if (type.equals("TRANSACT")) {
+            for (int i = 0; i < size; i++) {
+                hash_level_6[i] = getSHA256(transaction[i]);
+                System.out.println(transaction[i] + " --> " + hash_level_6[i]);
+            }
+        } else if (type.equals("HASH")) {
+            for (int i = 0; i < size; i++) {
+                hash_level_6[i] = transaction[i];
+            }
+        }
+        for (int i = 0; i < hash_level_5.length - 1; i++) {
+            if (!(hash_level_6[lb] == null && hash_level_6[ub] == null)) {
+                System.out.println("(lb=" + lb + ", ub=" + ub + ") --> " + " i=" + i);
+                hash_level_5[i] = getSHA256(hash_level_6[lb] + hash_level_6[ub]);
+                System.out.println("(" + transaction[lb] + "+" + transaction[ub] + ") --> " + hash_level_5[i]);
+                lb += 2;
+                ub += 2;
+            }
+        }
+        return (fourteenLeafNode(hash_level_5, hash_level_5.length, "HASH"));
+    }
+
     public static String fourteenLeafNode(String transaction[], int size, String type)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
         String[] hash_level_5 = new String[14];
         String[] hash_level_4 = new String[8];
         int lb = 0;
         int ub = 1;
+        int lastindex = countElements(transaction);
+        if (lastindex < size) {
+            if (lastindex % 2 == 1) {
+                transaction[lastindex] = transaction[lastindex - 1];
+            }
+        }
         if (type.equals("TRANSACT")) {
             for (int i = 0; i < size; i++) {
                 hash_level_5[i] = getSHA256(transaction[i]);
@@ -77,11 +156,13 @@ public class MerkleGeneration {
             }
         }
         for (int i = 0; i < hash_level_4.length - 1; i++) {
-            System.out.println("(lb=" + lb + ", ub=" + ub + ") --> " + " i=" + i);
-            hash_level_4[i] = getSHA256(hash_level_5[lb] + hash_level_5[ub]);
-            System.out.println("(" + transaction[lb] + "+" + transaction[ub] + ") --> " + hash_level_4[i]);
-            lb += 2;
-            ub += 2;
+            if (!(hash_level_5[lb] == null && hash_level_5[ub] == null)) {
+                System.out.println("(lb=" + lb + ", ub=" + ub + ") --> " + " i=" + i);
+                hash_level_4[i] = getSHA256(hash_level_5[lb] + hash_level_5[ub]);
+                System.out.println("(" + transaction[lb] + "+" + transaction[ub] + ") --> " + hash_level_4[i]);
+                lb += 2;
+                ub += 2;
+            }
         }
         return (eightLeafNode(hash_level_4, hash_level_4.length, "HASH"));
     }
@@ -92,7 +173,7 @@ public class MerkleGeneration {
         String[] hash_level_3 = new String[4];
         int lb = 0;
         int ub = 1;
-        System.out.println(" SIZE --> " + size);
+        System.out.println(" SIZE FROM 8 --> " + size);
         int lastindex = countElements(transaction);
         if (lastindex < size) {
             if (lastindex % 2 == 1) {
