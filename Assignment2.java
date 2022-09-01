@@ -3,12 +3,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.security.NoSuchAlgorithmException;
 
-public class Assignment1 {
+public class Assignment2 {
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         BlockchainCreator bc = new BlockchainCreator();
+        String genesisHash = bc.getMD5("02000000" + bc.getMD5("coinbase"));
         int B = Integer.parseInt(in.readLine());
-        String inputMerkle[] = new String[B];
+        String result[] = new String[B];
+        String blockHashList[] = new String[B + 1];
+        blockHashList[0] = genesisHash;
         String merkleRoot = "";
         for (int i = 1; i <= B; i++) {
             int T = Integer.parseInt(in.readLine());
@@ -22,16 +25,19 @@ public class Assignment1 {
                 }
                 String temp = in.readLine();
                 merkleRoot = bc.generateMerkleRoot(transac, transac.length);
-                inputMerkle[i - 1] = temp.equals(merkleRoot) ? "Valid" : "Invalid";
+                blockHashList[i] = bc.getMD5("02000000" + blockHashList[i - 1] + merkleRoot);
+                result[i - 1] = temp.equals(blockHashList[i - 1]) ? "Valid" : "Invalid";
             } else if (T == 1) {
                 String transac = in.readLine();
                 merkleRoot = bc.getMD5(transac);
+                blockHashList[i] = bc.getMD5("02000000" + blockHashList[i - 1] + merkleRoot);
                 String temp = in.readLine();
-                inputMerkle[i - 1] = temp.equals(merkleRoot) ? "Valid" : "Invalid";
+                result[i - 1] = temp.equals(blockHashList[i - 1]) ? "Valid" : "Invalid";
             }
         }
         for (int i = 0; i < B; i++) {
-            System.out.println(inputMerkle[i]);
+            System.out.println(result[i]);
         }
     }
+
 }
